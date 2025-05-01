@@ -1,6 +1,6 @@
 # Portfolio
 My portfolio consists of a revised version of my presentation and poster. 
- * Please use this link to view my revised poster. You may have to zoom out, depending on the size and ratio of your screen.
+ * Please use this link to view my revised poster. You may have to zoom out, depending on the size and ratio of your screen. It did not show a ghost column on my laptop, so I believe that issue should be fixed.
 https://aidanamericanu.github.io/Portfolio/
 
 # Research Topics
