@@ -7,6 +7,13 @@
 ![alt text](https://github.com/AidanAmericanU/Portfolio/blob/main/RevisedPresentation/ExemplaryCode.png)
 
 ```r
+setwd("C:/Users/aidan/Documents/SIS600/RFiles")
+library(tidyverse)
+library(kableExtra)
+library(RColorBrewer)
+
+  WelfareOnly <- read_csv('Welfare Only.csv')
+
  testplot <- ggplot(WelfareOnly, aes(x = wf2020, y = LDPvoteperc)) +
   geom_point() +
   geom_smooth(method = "lm", se = FALSE, color = "red") +
