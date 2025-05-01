@@ -11,3 +11,231 @@ My portfolio consists of a revised version of my presentation and poster.
 
 # Data Sources
 I've attached my data sources to the individual folders for each project.
+
+```r
+---
+title: Correlates of Birth Defects in Texan Counties
+poster_height: "48in"
+poster_width: "60in"
+font_family: 'Times New Roman'
+main_fontfamily: 'Bebas'
+main_findings: Analyzing the Impacts of Air Pollution on Birth Defects in Texas
+author:
+  - name: Aidan Isaac, American University
+    email: ai2401a@american.edu
+    params:
+      institution: American University
+    main: true
+output: 
+  posterdown::posterdown_betterport:
+    self_contained: true
+    pandoc_args: --mathjax
+    highlight: kate
+    number_sections: false
+link-citations: true
+bibliography: packages.bib
+---
+
+```{r startup, include=FALSE, echo=FALSE}
+knitr::opts_chunk$set(results = 'asis',
+                      echo = FALSE,
+                      warning = FALSE,
+                      tidy = FALSE,
+                      message = FALSE,
+                      fig.align = 'center',
+                      out.width = "100%")
+
+
+library(reshape2)
+library(tidyverse)
+library(broom)
+library(kableExtra)
+library(corrplot)
+
+setwd("C:/Users/aidan/Documents/SIS600/RFiles")
+
+TexasData <- read_csv('texasdrinkingbirth.csv')
+
+```
+
+## Introduction and Methods
+
+In this project, I sought to find out statistically significant factors that may increase birth defects. I chose Texas for this project as the Texas Department of State Health Services (DSHS) keeps robust, detailed, and accurate data regarding birth defects in the entire state. In the period from 2012-2021, Texas recorded 377,000 birth defects<a href="https://www.dshs.texas.gov/texas-birth-defects-epidemiology-surveillance/birth-defects-data-publications"><sup>1</sup></a>, far exceeding the data kept from other states in the US. The definition of birth defect according to the Texas DSHS is any abnormality that is present at birth. I started out by compiling county level data from the DSHS from 2012-2021<a href="https://healthdata.dshs.texas.gov/dashboard/births-and-deaths/birth-defects#data-source"><sup>2</sup></a>. I then used the CDC's 2019 County Health data for other variables, such as binge drinking rates<a href="https://www.countyhealthrankings.org/health-data/community-conditions/health-infrastructure/health-promotion-and-harm-reduction/excessive-drinking?year=2019&state=48&tab=1"><sup>3</sup></a>, air pollution levels<a href="https://www.countyhealthrankings.org/health-data/texas/data-and-resources"><sup>4</sup></a>, and diabetes rates<a href="https://www.countyhealthrankings.org/health-data/texas/data-and-resources"><sup>5</sup></a>. All of those rates are from 2019, which I chose as it was the last year before the COVID-19 pandemic.
+My initial research focused on binge drinking, but I will now focus more heavily on air pollution, as it is the largest contributing factor to birth defects found in the data. Note: Counties with less than 13 recorded counts of birth defects are suppressed, and not available in the dataset.
+
+* Binge drinking is defined by the CDC as over 4 drinks on one occasion, over 8 drinks per week, or drinking at all during pregnancy. 
+
+* Air pollution is measured by the CDC as micrograms of particulate matter present per cubic meter. 
+
+* Below the Poverty Line is measured by the % of the population making less than $29,000 a year.
+
+* Diabetes is measured by percent of the population diagnosed with Type 1 or Type 2 diabetes.
+
+
+```{r mapping, echo = FALSE, results='hide', fig.keep='all', message = FALSE,out.width="70%"}
+
+library(sf)
+library(tigris)
+library(tidyverse)
+library(patchwork)
+
+TexasMap <- counties(state = "TX", cb = TRUE, year = 2019)
+
+TexasData2 <- TexasData %>% 
+  mutate(FIPS = as.character(FIPS))
+
+TexasData2 <- TexasMap %>% 
+  st_as_sf() %>%
+  left_join(TexasData2, by = c("GEOID" = "FIPS"))
+
+BDMap <-ggplot(TexasData2) +
+  geom_sf(aes(fill = BDPrevalence), color = "white", lwd = 0.2) +
+  scale_fill_viridis_c(name = "Birth Defect Rate", option = "plasma", direction = -1) +
+  labs(title = "Birth Defect Prevalence in Texas (2019)") +
+  theme_void()
+
+AirMap <-ggplot(TexasData2) +
+  geom_sf(aes(fill = AirPollution), color = "white", lwd = 0.2) +
+  scale_fill_viridis_c(name = "% Air Pollution", option = "plasma", direction = -1) +
+  labs(title = "Air Pollution in Texas (2019)") +
+  theme_void()
+
+DrinkMap <-ggplot(TexasData2) +
+  geom_sf(aes(fill = CountyDrinking), color = "white", lwd = 0.2) +
+  scale_fill_viridis_c(name = "% Binge Drinking", option = "plasma", direction = -1) +
+  labs(title = "% of Adults Binge Drinking") +
+  theme_void()
+
+BDMap
+
+
+```
+
+<br/>
+
+<br/>
+
+<br/>
+
+## Hypothesis
+
+Adults who binge drink at a high rate are more likely to have children with birth defects across Texas, and this should be more significant than other factors such as air pollution and diabetes. This hypothesis stemmed from the fact that women are heavily discouraged from drinking alcohol while pregnant, as the existence of birth defects such as Fetal Alcohol Syndrome originate from alcohol consumption while pregnant. I am including air pollution and diabetes in this analysis, as those factors are often cited along with binge drinking by the CDC as contributing to birth defects.
+
+## Graphs and Data
+
+```{r corrmatrix, echo=FALSE, error=FALSE,warning=FALSE,out.width="70%"}
+
+CorrData<- TexasData %>%
+  as.data.frame() %>%                
+  select(BDPrevalence,CountyDrinking,BelowPoverty,AirPollution,Diabetes) %>%                   
+  as.matrix() %>%                   
+  cor(use = "complete.obs")
+
+new_names <- c("Birth Defects", "Drinking Rate", "Poverty Rate",
+               "Air Pollution", "Diabetes Rate")
+colnames(CorrData) <- rownames(CorrData) <- new_names
+
+corrplot(
+  CorrData,
+  type = "upper",          
+  diag = FALSE,            
+  na.label = " ",          
+  method = "color",
+   tl.col = "black",
+  addCoef.col = "black"    
+)
+```
+
+Here is a correlation matrix that I thought was interesting. While not presenting critical information to the research, it shows that correlation rates can be slightly different than what the multiple linear regression model shows. In particular, there's a very small correlation between birth defects and drinking rates, and a larger one between air pollution and birth defects. Poverty and drinking rates have a high negative correlation, but that is generally irrelevant to the project. 
+
+```{r graphs, echo=FALSE,out.width="70%"}
+ggplot(TexasData,aes(BDPrevalence,CountyDrinking)) +
+  geom_point(size = 2, color = 'darkviolet') +
+  geom_smooth(method=lm,
+              aes(),
+              alpha=.2) +
+  labs(title= 'Binge Drinking and Birth Defect Rates in Texas',
+       x = "County Binge Drinking",
+       y = "BDPrevalence")
+```
+This graph shows a very noisy scatterplot of birth defects and county drinking. It shows that there's not a strong correlation or statistical significance to the issue.
+```{r graphs2, echo=FALSE,out.width="70%"}
+
+ggplot(TexasData,aes(BDPrevalence,AirPollution)) +
+  geom_point(size = 2, color = 'darkgreen') +
+  geom_smooth(method=lm,
+              aes(),
+              alpha=.2) +
+  labs(title= 'Air Pollution and Birth Defect Rates in Texas',
+       x = "Air Pollution per Cubic Meter",
+       y = "Birth Defect Prevalence")
+
+
+```
+On the contrary, this air pollution scatterplot is still a little noisy, but shows a clear relationship between air pollution and birth defects.
+
+## Results
+
+```{r linearregression, echo=FALSE, error = FALSE,warning=FALSE}
+
+TexasLinear <- TexasData %>%  
+  select(BDPrevalence,CountyDrinking,BelowPoverty,AirPollution,Diabetes) %>%
+  na.omit() 
+
+model <- lm(BDPrevalence ~ CountyDrinking+BelowPoverty+AirPollution+ Diabetes, 
+            data = TexasLinear)
+
+model <- lm(BDPrevalence ~ ., data = TexasLinear)
+
+tidy(model) %>%
+  mutate(
+    term = recode(term,
+                  "(Intercept)" = "Intercept",
+                  "CountyDrinking" = "County Drinking Rate (%)",
+                  "BelowPoverty" = "Below Poverty Line (%)", 
+                  "AirPollution" = "Air Pollution Level (µg/m³)",
+                  "Diabetes" = "Diabetes Prevalence (%)"),
+    p.value = case_when(
+      p.value < 0.001 ~ paste0(format.pval(p.value, eps = 0.001), "***"),
+      p.value < 0.01 ~ paste0(round(p.value, 3), "**"),
+      p.value < 0.05 ~ paste0(round(p.value, 3), "*"),
+      p.value < 0.1 ~ paste0(round(p.value, 3), "."),
+      TRUE ~ as.character(round(p.value, 3))
+    )
+  ) %>%
+  rename(
+    "Variable" = term,
+    "Coefficient" = estimate,
+    "Std. Error" = std.error,
+    "t-value" = statistic,
+    "p-value" = p.value
+  ) %>%
+  kable(format = "html", 
+        digits = c(NA, 5, 5, 3, 5),
+        caption = "Linear Regression of Birth Defect Prevalence in Texas Counties",
+        align = c("l", "r", "r", "r", "r")) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"),
+                full_width=F,
+                htmltable_class = "spaced-table")
+
+```
+
+This table shows a multiple linear regression model of birth defect prevalence in Texas counties with county drinking rates, percent of people below the poverty level, air pollution levels, and diabetes prevalence. 
+
+* The county binge drinking rate is not statistically significant. The lack of statistical significance may be indicative of most women knowing not to drink alcohol during pregnancy.
+
+* Being below the poverty line has a slight statistical significant, but is still above the 0.05 threshold for typically considering something statistically significant.
+
+* Air pollution is the biggest variable impacting birth defects. It is highly statistically significant, and has the largest coefficient impacting the rates of birth defects. For every microgram of particulate matter per cubic meter, it is expected that birth defect rates will increase by 0.002%. 
+
+* Lastly, diabetes falls below the threshold of statistical significance. However, it seems that a one percent increase in the rate of diabetes is associated with a 0.001% decrease in birth defects. I believe that this is so small that it should be considered generally insignificant. One thing to look into would be how rates change for people with Type 1 diabetes and Type 2 diabetes, and if that might impact birth defect rates. 
+
+
+
+
+
+## Conclusion and Findings
+
+This research rejects the null hypothesis. There is strong evidence that air pollution at correlates with birth defects, and birth defects increase substantially in counties with higher amounts of air pollution. This hypothesis is much stronger than my previous binge drinking hypothesis, which did not conclusively show any strong relationship between those variables.
+
+```
