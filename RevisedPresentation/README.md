@@ -6,7 +6,7 @@
 
 * I've included an image of the graph as a .png in this folder.
 
-testplot <- ggplot(WelfareOnly, aes(x = wf2020, y = LDPvoteperc)) +
+```r testplot <- ggplot(WelfareOnly, aes(x = wf2020, y = LDPvoteperc)) +
   geom_point() +
   geom_smooth(method = "lm", se = FALSE, color = "red") +
   labs(title = "Welfare (2020) vs LDP Vote % (2021)",
@@ -49,4 +49,4 @@ finalplot <- ggplot(WelfareOnly) +
     legend.title = element_text(face = "bold"),
     panel.grid.minor = element_blank()
   )
-finalplot
+finalplot```
