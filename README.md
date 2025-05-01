@@ -1,5 +1,7 @@
 # Portfolio
 My portfolio consists of a revised version of my presentation and poster. 
+ * Please use this link to view my revised poster. You may have to zoom out, depending on the size and ratio of your screen.
+https://aidanamericanu.github.io/Portfolio/
 
 # Research Topics
 * For my presentation, my research topic was how welfare spending and infrastructure investment affects the Liberal Democratic Party's support in Japan by Prefecture.
