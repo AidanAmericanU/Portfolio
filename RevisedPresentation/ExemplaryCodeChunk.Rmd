@@ -1,0 +1,76 @@
+---
+title: "Japanese Election Data and Welfare Spending"
+author: "Aidan Isaac"
+institute: "ai2401a@american.edu"
+output:
+  beamer_presentation:
+    theme: "Copenhagen"
+    colortheme: "whale"
+fontsize: 11pt
+classoption: "aspectratio=169"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  comment = NA,
+  warning = FALSE)
+
+setwd("C:/Users/aidan/Documents/SIS600/RFiles")
+library(tidyverse)
+library(kableExtra)
+library(RColorBrewer)
+
+  WelfareOnly <- read_csv('Welfare Only.csv')
+  
+```
+
+```{r analysis, echo = FALSE, out.width="70%", fig.align='center'}
+setwd("C:/Users/aidan/Documents/SIS600/RFiles")
+
+testplot <- ggplot(WelfareOnly, aes(x = wf2020, y = LDPvoteperc)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(title = "Welfare (2020) vs LDP Vote % (2021)",
+       x = "Welfare Value (2020)", 
+       y = "LDP Vote Percentage (2021)") +
+  theme_minimal()
+
+finalplot <- ggplot(WelfareOnly) +
+  geom_point(aes(
+    x = wf2020, y = LDPvoteperc, color = "2020 Welfare vs 2021 Vote"),
+    size = 2, alpha = 0.7, shape = 17) +
+  geom_point(
+    aes(x = wf2015, y = LDPvoteperc2017, color = "2015 Welfare vs 2017 Vote"),
+    size = 2, alpha = 0.7, shape = 16) +
+  geom_smooth(
+    aes(x = wf2020, y = LDPvoteperc),
+    method = "lm", se = FALSE, color = "red4", linewidth = 1.2) +
+  geom_smooth(
+    aes(x = wf2015, y = LDPvoteperc2017),
+    method = "lm", se = FALSE, color = "blue4", linewidth = 1.2) +
+  labs(
+    title = "Welfare vs LDP Vote Share Over Time",
+    subtitle = "Comparison of 2015-2017 and 2020-2021 Data",
+    x = "Welfare Value", 
+    y = "LDP Vote Percentage",
+    color = "Time Period"
+  ) +
+  scale_color_manual(
+    values = c(
+      "2020 Welfare vs 2021 Vote" = "red4",
+      "2015 Welfare vs 2017 Vote" = "blue4"
+    )
+  ) +
+  theme_minimal(base_size = 20) +
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5, color = "gray"),
+    axis.title = element_text(face = "bold"),
+    legend.position = "bottom",
+    legend.title = element_text(face = "bold"),
+    panel.grid.minor = element_blank()
+  )
+finalplot
+```
