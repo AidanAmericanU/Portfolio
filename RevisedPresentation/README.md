@@ -4,7 +4,7 @@
 * I chose this code chunk as it took me a considerable amount of time to create and make look good, much more so than any other graph.
 * It was more complicated to create than I would've liked, but I think I made it look good and easily comprehensible in the end, so I am proud of it!
 
-* I've included an image of the graph as a .png in this folder.
+![alt text](https://github.com/AidanAmericanU/Portfolio/blob/main/RevisedPresentation/ExemplaryCode.png)
 
 ```r
  testplot <- ggplot(WelfareOnly, aes(x = wf2020, y = LDPvoteperc)) +
