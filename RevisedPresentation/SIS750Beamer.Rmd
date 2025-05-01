@@ -1,0 +1,192 @@
+---
+title: "Japanese Election Data and Welfare Spending"
+author: "Aidan Isaac"
+institute: "ai2401a@american.edu"
+output:
+  beamer_presentation:
+    theme: "Copenhagen"
+    colortheme: "whale"
+fontsize: 11pt
+classoption: "aspectratio=169"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  comment = NA,
+  warning = FALSE)
+
+setwd("C:/Users/aidan/Documents/SIS600/RFiles")
+library(maps)
+library(viridis)
+library(tidyverse)
+library(ggrepel)
+library(patchwork)
+library(geodata)
+library(mapdata)
+library(kableExtra)
+library(corrplot)
+library(RColorBrewer)
+
+  WelfareOnly <- read_csv('Welfare Only.csv')
+  
+  jpn2 <- gadm(country = 'JPN', level = 1, path = "C:/Users/aidan/Documents/SIS600/gadm", version = "4.0", resolution = 1)
+  plot(jpn2)
+```
+
+## Overview and Data Summary
+
+This presentation is focused on the effect that Japanese Welfare spending has on the Liberal Democratic Party's (LDP) electoral success in elections. I collected election data publicly available from the Japanese government in the 2017 and 2021 general elections. I matched this with welfare spending data from 2015 and 2020, as those were the closest years available to both of those elections. 
+
+* My motivation from this project stemmed from a research paper I used as a source for undergraduate research. The research paper discussed the LDP's support structure being linked heavily to public infrastructure projects.
+* Public infrastructure projects created jobs in parts of Japan hit hard by the economic crash in the late 1980s. This created a support base, and the research argued that completing public infrastructure projects boosted support, especially in more rural parts of Japan.
+* I wanted to check the data to see if this relationship is still around in the modern day.
+
+## The Liberal Democratic Party
+
+* The LDP is a center-right party in Japan, which has a parliamentary system. 
+* Japan is often considered a "dominant party democracy", where the LDP consistently wins elections with a large plurality of support. 
+* The LDP has access to a vast party apparatus that has been built up over the many decades they were in power. Their image is portrayed almost as technocratic, as they frame themselves as the experienced party with a long track record of competent governance.
+* The LDP's voter base leans older, and relies much more heavily on welfare programs than younger populations. Overall this project was meant to see if welfare investments have a tangible impact on the support of the LDP in Japan.
+
+```{r welfaremap, echo = FALSE}
+ fullwelfaremap <- if (require("maps")) {
+    japanmap <- map_data("japan")
+    WelfareOnly
+    names(WelfareOnly) <- tolower(names(WelfareOnly))
+    WelfareOnly$Prefectures <- tolower(rownames(WelfareOnly))
+    
+    mapdf <- merge(japanmap,WelfareOnly,sort=TRUE, by = 'region')
+    mapdf <- mapdf[order(mapdf$order),]
+    ggplot(mapdf, aes(long,lat)) +
+      geom_polygon(aes(group = group, fill = wf2015)) +
+      coord_map("albers", lat0 =100, lat1 = 129.5)+
+      labs(title= 'Japan Welfare Spending by Prefecture in 2015', y = 'Latitude', x = 'Longitude', fill = 'Percent of\nPrefectural Budget')
+  }
+  
+  welcolormap <- fullwelfaremap +
+    scale_fill_viridis_c(direction=-1,option = 'mako', breaks = c(15,20,25,30,35,40))+
+  theme_void()
+
+```
+
+## LDP Vote Map
+
+These are two maps showing Japanese welfare spending by prefecture and their 2021 LDP vote share by prefecture. The 2015 is heavily skewed by the Fukushima disaster, which occurred in 2011. Fallout from that disaster led to an enormous increase in welfare spending, which notably did not lead to notable electoral success for the LDP.
+```{r LDPvote, echo = FALSE, out.width="100%", fig.height = 3,fig.align='center'}
+    fullvotemap <- if (require("maps")) {
+  japanmap <- map_data("japan")
+  WelfareOnly
+  names(WelfareOnly) <- tolower(names(WelfareOnly))
+  WelfareOnly$Prefectures <- tolower(rownames(WelfareOnly))
+  
+  mapdf <- merge(japanmap,WelfareOnly,sort=TRUE, by = 'region')
+  mapdf <- mapdf[order(mapdf$order),]
+  ggplot(mapdf, aes(long,lat)) +
+    geom_polygon(aes(group = group, fill = ldpvoteperc2017)) +
+    coord_map("albers", lat0 =100, lat1 = 129.5) +
+    labs(title= 'LDP Vote Percentage by Prefecture in 2017', y = 'Latitude', x = 'Longitude', fill = 'LDP Vote Percentage')
+    }
+  
+colormap <- fullvotemap +
+  scale_fill_viridis_c(direction=-1,option = 'magma',breaks = c(30,35,40,45,50,55,60,65))+
+  theme_void()
+
+welcolormap + colormap  
+```
+
+## Analysis 1: Welfare Plot
+
+```{r welfareplot, echo = FALSE, out.width="70%",fig.align='center'}
+WelfareOnly <- read_csv('Welfare Only.csv')
+  welfareplot <- ggplot(WelfareOnly,aes(gensocspend,LDPvoteperc)) +
+    geom_point(size = 2, color = 'darkviolet') +
+    geom_smooth(method=lm,
+                aes(),
+                alpha=.2) +
+    geom_label_repel(aes(label = ifelse(region %in% c("Tokyo","Toyama","Shizuoka", "Osaka", "Hokkaido", "Okinawa","Yamaguchi","Niigata","Yamanashi","Saitama","Wakayama"), region, "")), 
+                     size = 2.75) +    
+    labs(title= '2021 Welfare Spending and LDP Vote Share',
+         x = "Welfare Spending in Thousands of Yen",
+         y = "LDP Vote Percentage")+
+    theme_gray(base_size = 20)
+
+
+  welfareplot
+```
+
+## Analysis 1: Public Works Plot
+
+```{r pressure, echo = FALSE, out.width="70%",fig.align='center'}
+WelfareOnly <- read_csv('Welfare Only.csv')
+ pubworkplot <- ggplot(WelfareOnly,aes(publicworks2020,LDPvoteperc)) +
+    geom_point(size = 2, color = 'darkolivegreen') +
+    geom_smooth(method=lm,
+                aes(),
+                alpha=.2) +
+    geom_label_repel(aes(label = ifelse(region %in% c("Tokyo","Iwate","Fukushima","Chiba", "Toyama","Shizuoka", "Osaka", "Hokkaido", "Okinawa","Yamaguchi","Niigata","Yamanashi","Saitama","Wakayama"), region, "")), 
+                     size = 2.75) +  
+    labs(title= '2021 Public Infrastructure Spending and LDP Vote Share',
+         x = "Public Infrastructure Spending in Thousands of Yen",
+         y = "LDP Vote Percentage")+
+    theme_gray(base_size = 20)
+  pubworkplot
+```
+
+## Analysis 2: Comparison of Welfare and Voting Data between Years
+
+```{r analysis, echo = FALSE, out.width="70%", fig.align='center'}
+setwd("C:/Users/aidan/Documents/SIS600/RFiles")
+
+testplot <- ggplot(WelfareOnly, aes(x = wf2020, y = LDPvoteperc)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(title = "Welfare (2020) vs LDP Vote % (2021)",
+       x = "Welfare Value (2020)", 
+       y = "LDP Vote Percentage (2021)") +
+  theme_minimal()
+
+finalplot <- ggplot(WelfareOnly) +
+  geom_point(aes(
+    x = wf2020, y = LDPvoteperc, color = "2020 Welfare vs 2021 Vote"),
+    size = 2, alpha = 0.7, shape = 17) +
+  geom_point(
+    aes(x = wf2015, y = LDPvoteperc2017, color = "2015 Welfare vs 2017 Vote"),
+    size = 2, alpha = 0.7, shape = 16) +
+  geom_smooth(
+    aes(x = wf2020, y = LDPvoteperc),
+    method = "lm", se = FALSE, color = "red4", linewidth = 1.2) +
+  geom_smooth(
+    aes(x = wf2015, y = LDPvoteperc2017),
+    method = "lm", se = FALSE, color = "blue4", linewidth = 1.2) +
+  labs(
+    title = "Welfare vs LDP Vote Share Over Time",
+    subtitle = "Comparison of 2015-2017 and 2020-2021 Data",
+    x = "Welfare Value", 
+    y = "LDP Vote Percentage",
+    color = "Time Period"
+  ) +
+  scale_color_manual(
+    values = c(
+      "2020 Welfare vs 2021 Vote" = "red4",
+      "2015 Welfare vs 2017 Vote" = "blue4"
+    )
+  ) +
+  theme_minimal(base_size = 20) +
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5, color = "gray"),
+    axis.title = element_text(face = "bold"),
+    legend.position = "bottom",
+    legend.title = element_text(face = "bold"),
+    panel.grid.minor = element_blank()
+  )
+finalplot
+```
+
+## Conclusion
+
+* There was certainly a decline in both welfare spending and the LDP's share of the vote between the two time periods, but it is uncertain what degree they are related.
+* The LDP seems to get more vote share among prefectures with lower welfare rates. This could indicate that wealthier people generally vote more for the LDP.
+* It seems as if infrastructure spending has a greater positive correlation, and I would like to go more in depth with infrastructure spending in the future.
